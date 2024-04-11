@@ -19,13 +19,22 @@ std::vector<CsvData> readCsvFile(const std::string& filePath) {
     std::vector<CsvData> data;
     std::ifstream file(filePath);
     std::string line;
-    
-    std::getline(file, line); // skip first line
-    while (std::getline(file, line)) {
+    int peakCount = 0; // Counter for peaks found
+
+    std::getline(file, line); // Skip first line
+    while (std::getline(file, line) && peakCount < 2) {
         std::istringstream iss(line);
         CsvData row;
         iss >> row.seconds >> row.volts;
         data.push_back(row);
+
+        // Detect peak
+        if (data.size() >= 3 &&
+            data[data.size() - 2].volts > data[data.size() - 3].volts &&
+            data[data.size() - 2].volts > data[data.size() - 1].volts) {
+            std::cout << "Peak detected at " << data[data.size() - 2].seconds << " seconds with value " << data[data.size() - 2].volts << std::endl;
+            ++peakCount;
+        }
     }
 
     return data;
