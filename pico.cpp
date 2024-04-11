@@ -40,7 +40,9 @@ std::vector<std::string> getCsvFiles() {
     std::vector<std::string> csvFiles;
     for (const auto& entry : fs::directory_iterator(".")) {
         if (entry.path().extension() == ".csv") {
+            std::cout << entry.path().string() << std::endl;
             csvFiles.push_back(entry.path().string());
+            
         }
     }
     return csvFiles;
