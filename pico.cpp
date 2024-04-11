@@ -1,101 +1,65 @@
 // pico.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
+
 #include <iostream>
 #include <fstream>
-#include <vector>
-#include <string>
 #include <sstream>
-#include <cstdio>  // For fopen_s
+#include <string>
+#include <vector>
+#include <filesystem>
 
-// Define DataPoint struct
-struct DataPoint {
-    double seconds;
-    double volts;
-};
+namespace fs = std::filesystem;
 
-// Function to read CSV file
-std::vector<DataPoint> readCSV(const std::string& filename) {
-    std::vector<DataPoint> dataPoints;
-    FILE* file;
-    if (fopen_s(&file, filename.c_str(), "r") != 0) {
-        std::cerr << "Failed to open file: " << filename << std::endl;
-        return dataPoints;
-    }
+// Define a function to read data from a CSV file
+std::vector<std::vector<double>> readCsvFile(const std::string& filePath) {
+    std::vector<std::vector<double>> data;
+    std::ifstream file(filePath);
+    std::string line;
 
-    char buffer[256];
-    // Skip header line
-    if (fgets(buffer, sizeof(buffer), file) == nullptr) {
-        std::cerr << "Failed to read header from file: " << filename << std::endl;
-        fclose(file);
-        return dataPoints;
-    }
+    while (std::getline(file, line)) {
+        std::vector<double> row;
+        std::istringstream iss(line);
+        double value;
 
-    while (fgets(buffer, sizeof(buffer), file) != nullptr) {
-        std::istringstream iss(buffer);
-        std::string token;
-        DataPoint point;
-
-        // Read seconds
-        if (!std::getline(iss, token, ',')) {
-            std::cerr << "Failed to read seconds from file: " << filename << std::endl;
-            fclose(file);
-            return dataPoints;
+        while (iss >> value) {
+            row.push_back(value);
+            if (iss.peek() == ',') {
+                iss.ignore();
+            }
         }
-        point.seconds = std::stod(token);
 
-        // Read volts
-        if (!std::getline(iss, token, ',')) {
-            std::cerr << "Failed to read volts from file: " << filename << std::endl;
-            fclose(file);
-            return dataPoints;
-        }
-        point.volts = std::stod(token);
-
-        dataPoints.push_back(point);
+        data.push_back(row);
     }
 
-    fclose(file);
-    return dataPoints;
+    return data;
 }
 
-// Function to list CSV files in current directory
-std::vector<std::string> listCSVFiles() {
+// Get a list of all CSV files in the current directory
+std::vector<std::string> getCsvFiles() {
     std::vector<std::string> csvFiles;
-    FILE* pipe;
-    if (fopen_s(&pipe, "ls *.csv", "r") != 0 || pipe == nullptr) return csvFiles;
-
-    char buffer[128];
-    while (!feof(pipe)) {
-        if (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
-            csvFiles.push_back(buffer);
+    for (const auto& entry : fs::directory_iterator(".")) {
+        if (entry.path().extension() == ".csv") {
+            csvFiles.push_back(entry.path().string());
         }
     }
-    fclose(pipe);
-
     return csvFiles;
 }
 
-// Main function
 int main() {
-    std::vector<std::string> csvFiles = listCSVFiles();
+    std::vector<std::string> csvFiles = getCsvFiles();
 
-    // Iterate over CSV files
-    for (const auto& filename : csvFiles) {
-        // Remove newline character from filename
-        std::string trimmedFilename = filename.substr(0, filename.size() - 1);
-
-        // Read data from CSV file
-        std::vector<DataPoint> data = readCSV(trimmedFilename);
-
-        // Print data
-        std::cout << "File: " << trimmedFilename << std::endl;
-        for (const auto& point : data) {
-            std::cout << "Seconds: " << point.seconds << ", Volts: " << point.volts << std::endl;
+    for (const auto& file : csvFiles) {
+        std::vector<std::vector<double>> fileData = readCsvFile(file);
+        std::cout << "Data from " << file << ":\n";
+        for (const auto& row : fileData) {
+            for (const auto& value : row) {
+                std::cout << value << "\t";
+            }
+            std::cout << "\n";
         }
-        std::cout << std::endl;
+        std::cout << "\n";
     }
 
     return 0;
 }
-
