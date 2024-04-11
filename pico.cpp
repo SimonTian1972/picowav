@@ -19,7 +19,8 @@ std::vector<CsvData> readCsvFile(const std::string& filePath) {
     std::vector<CsvData> data;
     std::ifstream file(filePath);
     std::string line;
-
+    
+    std::getline(file, line); // skip first line
     while (std::getline(file, line)) {
         std::istringstream iss(line);
         CsvData row;
