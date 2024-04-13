@@ -8,12 +8,12 @@
 
 namespace fs = std::filesystem;
 
-/*
+
 
 //===========================================================================
 //=  Function to compute mean for a series X                                =
 //===========================================================================
-double compute_mean(void)
+double compute_mean(const double X[], int N)
 {
     double   mean;        // Computed mean value to be returned
     int      i;           // Loop counter
@@ -29,7 +29,7 @@ double compute_mean(void)
 //===========================================================================
 //=  Function to compute variance for a series X                            =
 //===========================================================================
-double compute_variance(void)
+double compute_variance(const double X[], int N, double Mean)
 {
     double   var;         // Computed variance value to be returned
     int      i;           // Loop counter
@@ -46,7 +46,7 @@ double compute_variance(void)
 //=  Function to compute autocorrelation for a series X                     =
 //=   - Corrected divide by N to divide (N - lag) from Tobias Mueller       =
 //===========================================================================
-double compute_autoc(int lag)
+double compute_autoc(int lag, const double X[], int N, double Mean, double Variance)
 {
     double   autocv;      // Autocovariance value
     double   ac_value;    // Computed autocorrelation value to be returned
@@ -63,17 +63,9 @@ double compute_autoc(int lag)
 
     return(ac_value);
 }
-*/
-
-// Define a struct to store data
-struct CsvData {
-    double seconds;
-    double volts;
-};
 
 // Define a function to read data from a CSV file
 void readCsvFile(const std::string& filePath, std::vector<double>& seconds, std::vector<double>& volts) {
-    std::vector<CsvData> data;
     std::ifstream file(filePath);
     std::string line;
 
@@ -84,8 +76,8 @@ void readCsvFile(const std::string& filePath, std::vector<double>& seconds, std:
         iss >> s;
         iss.ignore(1, ',');
         iss >> v;
-        std::cout << s << std::endl;
-        std::cout << v << std::endl;
+        seconds.push_back(s);
+        volts.push_back(v);
     }
 }
 
@@ -105,10 +97,26 @@ int main() {
     std::vector<std::string> csvFiles = getCsvFiles();
     std::vector<double> seconds;
     std::vector<double> volts;
+    std::vector<double> autocvs;
     for (const auto& file : csvFiles) {
         seconds.clear();
         volts.clear();
         readCsvFile(file, seconds, volts);
+        int N = volts.size();
+        double mean = compute_mean(volts.data(), N);
+        double var = compute_variance(volts.data(), N, mean);
+        double maxAutocv = 0;
+        int lagSave = 0;
+        autocvs.clear();
+        for (int lag = 1; lag < N; lag++) {
+            double autocv = compute_autoc(lag, volts.data(), N, mean, var);
+            if (autocv > maxAutocv) {
+                lagSave = lag;
+                maxAutocv = autocv;
+            }
+            autocvs.push_back(autocv);
+        }
+        std::cout << file << " lag = " << lagSave << std::endl;
     }
     return 0;
 }
