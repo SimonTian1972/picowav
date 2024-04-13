@@ -8,6 +8,63 @@
 
 namespace fs = std::filesystem;
 
+/*
+
+//===========================================================================
+//=  Function to compute mean for a series X                                =
+//===========================================================================
+double compute_mean(void)
+{
+    double   mean;        // Computed mean value to be returned
+    int      i;           // Loop counter
+
+    // Loop to compute mean
+    mean = 0.0;
+    for (i = 0; i < N; i++)
+        mean = mean + (X[i] / N);
+
+    return(mean);
+}
+
+//===========================================================================
+//=  Function to compute variance for a series X                            =
+//===========================================================================
+double compute_variance(void)
+{
+    double   var;         // Computed variance value to be returned
+    int      i;           // Loop counter
+
+    // Loop to compute variance
+    var = 0.0;
+    for (i = 0; i < N; i++)
+        var = var + (pow((X[i] - Mean), 2.0) / N);
+
+    return(var);
+}
+
+//===========================================================================
+//=  Function to compute autocorrelation for a series X                     =
+//=   - Corrected divide by N to divide (N - lag) from Tobias Mueller       =
+//===========================================================================
+double compute_autoc(int lag)
+{
+    double   autocv;      // Autocovariance value
+    double   ac_value;    // Computed autocorrelation value to be returned
+    int      i;           // Loop counter
+
+    // Loop to compute autovariance
+    autocv = 0.0;
+    for (i = 0; i < (N - lag); i++)
+        autocv = autocv + ((X[i] - Mean) * (X[i + lag] - Mean));
+    autocv = (1.0 / (N - lag)) * autocv;
+
+    // Autocorrelation is autocovariance divided by variance
+    ac_value = autocv / Variance;
+
+    return(ac_value);
+}
+*/
+
 // Define a struct to store data
 struct CsvData {
     double seconds;
@@ -15,29 +72,21 @@ struct CsvData {
 };
 
 // Define a function to read data from a CSV file
-std::vector<CsvData> readCsvFile(const std::string& filePath) {
+void readCsvFile(const std::string& filePath, std::vector<double>& seconds, std::vector<double>& volts) {
     std::vector<CsvData> data;
     std::ifstream file(filePath);
     std::string line;
-    int peakCount = 0; // Counter for peaks found
 
     std::getline(file, line); // Skip first line
-    while (std::getline(file, line) && peakCount < 2) {
+    while (std::getline(file, line)) {
         std::istringstream iss(line);
-        CsvData row;
-        iss >> row.seconds >> row.volts;
-        data.push_back(row);
-
-        // Detect peak
-        if (data.size() >= 3 &&
-            data[data.size() - 2].volts > data[data.size() - 3].volts &&
-            data[data.size() - 2].volts > data[data.size() - 1].volts) {
-            std::cout << "Peak detected at " << data[data.size() - 2].seconds << " seconds with value " << data[data.size() - 2].volts << std::endl;
-            ++peakCount;
-        }
+        double s, v;
+        iss >> s;
+        iss.ignore(1, ',');
+        iss >> v;
+        std::cout << s << std::endl;
+        std::cout << v << std::endl;
     }
-
-    return data;
 }
 
 // Get a list of all CSV files in the current directory
@@ -54,15 +103,12 @@ std::vector<std::string> getCsvFiles() {
 
 int main() {
     std::vector<std::string> csvFiles = getCsvFiles();
-
+    std::vector<double> seconds;
+    std::vector<double> volts;
     for (const auto& file : csvFiles) {
-        std::vector<CsvData> fileData = readCsvFile(file);
-        std::cout << "Data from " << file << ":\n";
-        for (const auto& row : fileData) {
-            std::cout << "Seconds: " << row.seconds << ", Volts: " << row.volts << "\n";
-        }
-        std::cout << "\n";
+        seconds.clear();
+        volts.clear();
+        readCsvFile(file, seconds, volts);
     }
-
     return 0;
 }
