@@ -68,7 +68,7 @@ double compute_autoc(int lag, const double X[], int N, double Mean, double Varia
 #ifndef M_PI
 #define M_PI (3.14159265358979323846) // Define M_PI if not already defined
 #endif
-// Function to calculate the Discrete Fourier Transform (DFT) of a signal X
+// Function to calculate the Discrete Fourier Transform (DFT) of a signal X, how about FFT?
 void DFT(const double X[], int N, double frequencies[], double amplitudes[]) {
     for (int k = 0; k < N; ++k) {
         double re = 0.0;
