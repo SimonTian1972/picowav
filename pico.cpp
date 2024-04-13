@@ -9,7 +9,7 @@
 namespace fs = std::filesystem;
 
 
-
+//from  https://cse.usf.edu/~kchriste/tools/autoc.c
 //===========================================================================
 //=  Function to compute mean for a series X                                =
 //===========================================================================
@@ -101,7 +101,7 @@ int main() {
     for (const auto& file : csvFiles) {
         seconds.clear();
         volts.clear();
-        readCsvFile("Wave223.csv", seconds, volts);
+        readCsvFile(file, seconds, volts);
         int N = volts.size();
         double mean = compute_mean(volts.data(), N);
         double var = compute_variance(volts.data(), N, mean);
@@ -135,7 +135,7 @@ int main() {
         double diff = abs(firstPeakAcv - maxAutocv) / ((firstPeakAcv + maxAutocv) / 2);
         std::cout << "diff in percentage" << diff << std::endl;
         if (diff > 0.15) {
-            std::cout << "possible error" << std::endl;
+            std::cout << "possible error" << std::endl; // Wave223.csv
         }
     }
     return 0;
