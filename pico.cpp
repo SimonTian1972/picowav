@@ -107,16 +107,26 @@ int main() {
         double var = compute_variance(volts.data(), N, mean);
         double maxAutocv = 0;
         int lagSave = 0;
+        double firstPeakAcv = 0;
+        int firstPeaklag = 0;
         autocvs.clear();
         for (int lag = 1; lag < N; lag++) {
             double autocv = compute_autoc(lag, volts.data(), N, mean, var);
+
+            if (lag > 5 && firstPeaklag == 0) {
+                if (*autocvs.rbegin() > autocv && *autocvs.rbegin() > *(autocvs.rbegin() + 1)) {
+                    firstPeaklag = lag-1;
+                    firstPeakAcv = *autocvs.rbegin();
+                }
+            }
+
             if (autocv > maxAutocv) {
                 lagSave = lag;
                 maxAutocv = autocv;
             }
             autocvs.push_back(autocv);
         }
-        std::cout << file << " lag = " << lagSave << std::endl;
+        std::cout << file << " lag = " << lagSave << "first = " << firstPeaklag  <<  std::endl;
     }
     return 0;
 }
