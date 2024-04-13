@@ -64,6 +64,38 @@ double compute_autoc(int lag, const double X[], int N, double Mean, double Varia
     return(ac_value);
 }
 
+#include <cmath>
+#ifndef M_PI
+#define M_PI (3.14159265358979323846) // Define M_PI if not already defined
+#endif
+// Function to calculate the Discrete Fourier Transform (DFT) of a signal X
+void DFT(const double X[], int N, double frequencies[], double amplitudes[]) {
+    for (int k = 0; k < N; ++k) {
+        double re = 0.0;
+        double im = 0.0;
+        for (int n = 0; n < N; ++n) {
+            double angle = 2.0 * M_PI * k * n / N;
+            re += X[n] * cos(angle);
+            im -= X[n] * sin(angle); // negative sign for forward transform
+        }
+        frequencies[k] = k;
+        amplitudes[k] = sqrt(re * re + im * im);
+    }
+}
+
+// Function to find the index of the maximum amplitude in an array
+int findMaxAmplitudeIndex(const double amplitudes[], int N) {
+    int maxIndex = 1;
+    double maxAmplitude = amplitudes[1];
+    for (int i = 2; i < N/2; ++i) {
+        if (amplitudes[i] > maxAmplitude) {
+            maxAmplitude = amplitudes[i];
+            maxIndex = i;
+        }
+    }
+    return maxIndex;
+}
+
 // Define a function to read data from a CSV file
 void readCsvFile(const std::string& filePath, std::vector<double>& seconds, std::vector<double>& volts) {
     std::ifstream file(filePath);
@@ -131,12 +163,27 @@ int main() {
         }
 
 
-        std::cout << file << " lag = " << lagSave << "first = " << firstPeaklag  <<  std::endl;
+        //std::cout << file << " lag = " << lagSave << "first = " << firstPeaklag  <<  std::endl;
         double diff = abs(firstPeakAcv - maxAutocv) / ((firstPeakAcv + maxAutocv) / 2);
-        std::cout << "diff in percentage" << diff << std::endl;
+        //std::cout << "diff in percentage" << diff << std::endl;
         if (diff > 0.1) {
-            std::cout << "possible error" << std::endl; // Wave223.csv
+            std::cout << file << " possible error 1 " << std::endl; // Wave223.csv
         }
+
+        std::vector<double> frequencies(N, 0);
+        std::vector<double> amplitudes(N, 0);
+
+        // Calculate the DFT of the signal
+        DFT(volts.data(), N, frequencies.data(), amplitudes.data());
+
+        // Find the index of the maximum amplitude
+        int maxAmplitudeIndex = findMaxAmplitudeIndex(amplitudes.data(), N);
+        int period = N / frequencies[maxAmplitudeIndex];
+        std::cout << "period= " << period << " firstPeaklag= " << firstPeaklag << std::endl;
+        if (abs(period - firstPeaklag) > 4) {
+            std::cout << file <<  " possible error 2" << std::endl; // Wave223.csv
+        }
+
     }
     return 0;
 }
