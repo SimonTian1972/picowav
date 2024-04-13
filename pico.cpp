@@ -134,7 +134,7 @@ int main() {
         std::cout << file << " lag = " << lagSave << "first = " << firstPeaklag  <<  std::endl;
         double diff = abs(firstPeakAcv - maxAutocv) / ((firstPeakAcv + maxAutocv) / 2);
         std::cout << "diff in percentage" << diff << std::endl;
-        if (diff > 0.15) {
+        if (diff > 0.1) {
             std::cout << "possible error" << std::endl; // Wave223.csv
         }
     }
