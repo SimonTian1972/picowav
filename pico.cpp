@@ -101,7 +101,7 @@ int main() {
     for (const auto& file : csvFiles) {
         seconds.clear();
         volts.clear();
-        readCsvFile(file, seconds, volts);
+        readCsvFile("Wave223.csv", seconds, volts);
         int N = volts.size();
         double mean = compute_mean(volts.data(), N);
         double var = compute_variance(volts.data(), N, mean);
@@ -110,23 +110,33 @@ int main() {
         double firstPeakAcv = 0;
         int firstPeaklag = 0;
         autocvs.clear();
-        for (int lag = 1; lag < N; lag++) {
+        autocvs.push_back(0); //  zero lag
+        for (int lag = 1; lag < N*3/4; lag++) {
             double autocv = compute_autoc(lag, volts.data(), N, mean, var);
-
-            if (lag > 5 && firstPeaklag == 0) {
-                if (*autocvs.rbegin() > autocv && *autocvs.rbegin() > *(autocvs.rbegin() + 1)) {
-                    firstPeaklag = lag-1;
-                    firstPeakAcv = *autocvs.rbegin();
-                }
-            }
-
             if (autocv > maxAutocv) {
                 lagSave = lag;
                 maxAutocv = autocv;
             }
             autocvs.push_back(autocv);
         }
+
+        for (int lag = 2; lag < N * 3 / 4-1; lag++) {
+            if (autocvs[lag] > maxAutocv * 0.8) {
+                if (autocvs[lag] > autocvs[lag - 1] && autocvs[lag] > autocvs[lag + 1]) {
+                    firstPeaklag = lag;
+                    firstPeakAcv = autocvs[lag];
+                    break;
+                }
+            }
+        }
+
+
         std::cout << file << " lag = " << lagSave << "first = " << firstPeaklag  <<  std::endl;
+        double diff = abs(firstPeakAcv - maxAutocv) / ((firstPeakAcv + maxAutocv) / 2);
+        std::cout << "diff in percentage" << diff << std::endl;
+        if (diff > 0.15) {
+            std::cout << "possible error" << std::endl;
+        }
     }
     return 0;
 }
