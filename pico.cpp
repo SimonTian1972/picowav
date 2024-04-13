@@ -138,7 +138,7 @@ int main() {
         double mean = compute_mean(volts.data(), N);
         double var = compute_variance(volts.data(), N, mean);
         double maxAutocv = 0;
-        int lagSave = 0;
+        double minAutocv = DBL_MAX;
         double firstPeakAcv = 0;
         int firstPeaklag = 0;
         autocvs.clear();
@@ -146,26 +146,32 @@ int main() {
         for (int lag = 1; lag < N*3/4; lag++) {
             double autocv = compute_autoc(lag, volts.data(), N, mean, var);
             if (autocv > maxAutocv) {
-                lagSave = lag;
                 maxAutocv = autocv;
+            }
+            if (autocv < minAutocv) {
+                minAutocv = autocv;
             }
             autocvs.push_back(autocv);
         }
 
+        bool beyondValley = false;
         for (int lag = 2; lag < N * 3 / 4-1; lag++) {
-            if (autocvs[lag] > maxAutocv * 0.8) {
-                if (autocvs[lag] > autocvs[lag - 1] && autocvs[lag] > autocvs[lag + 1]) {
-                    firstPeaklag = lag;
-                    firstPeakAcv = autocvs[lag];
-                    break;
+            if (beyondValley == false) {
+                if (autocvs[lag] < autocvs[lag - 1] && autocvs[lag] < autocvs[lag + 1]) {
+                    beyondValley = true;
+                }
+            } else {
+                if (autocvs[lag] > maxAutocv * 0.8) {
+                    if (autocvs[lag] > autocvs[lag - 1] && autocvs[lag] > autocvs[lag + 1]) {
+                        firstPeaklag = lag;
+                        firstPeakAcv = autocvs[lag];
+                        break;
+                    }
                 }
             }
         }
 
-
-        //std::cout << file << " lag = " << lagSave << "first = " << firstPeaklag  <<  std::endl;
         double diff = abs(firstPeakAcv - maxAutocv) / ((firstPeakAcv + maxAutocv) / 2);
-        //std::cout << "diff in percentage" << diff << std::endl;
         if (diff > 0.1) {
             std::cout << file << " possible error 1 " << std::endl; // Wave223.csv
         }
@@ -179,7 +185,7 @@ int main() {
         // Find the index of the maximum amplitude
         int maxAmplitudeIndex = findMaxAmplitudeIndex(amplitudes.data(), N);
         int period = N / frequencies[maxAmplitudeIndex];
-        std::cout << "period= " << period << " firstPeaklag= " << firstPeaklag << std::endl;
+        //std::cout << "period= " << period << " firstPeaklag= " << firstPeaklag << std::endl;
         if (abs(period - firstPeaklag) > 4) {
             std::cout << file <<  " possible error 2" << std::endl; // Wave223.csv
         }
