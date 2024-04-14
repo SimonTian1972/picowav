@@ -125,11 +125,29 @@ std::vector<std::string> getCsvFiles() {
     return csvFiles;
 }
 
+
+void saveToCSV(const std::vector<std::pair<std::string, double>>& data, const std::string& filename) {
+    std::ofstream outputFile(filename);
+    if (!outputFile.is_open()) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return;
+    }
+    // Iterate over each vector of pairs
+    for (const auto& item : data) {
+        // Write each pair to the CSV file
+            outputFile << item.first << ", " << item.second << "\n";
+    }
+
+    outputFile.close();
+    std::cout << "Data saved to " << filename << " successfully." << std::endl;
+}
+
 int main() {
     std::vector<std::string> csvFiles = getCsvFiles();
     std::vector<double> seconds;
     std::vector<double> volts;
     std::vector<double> autocvs;
+    std::vector<std::pair<std::string, double>> result; // file name and frequency
     for (const auto& file : csvFiles) {
         seconds.clear();
         volts.clear();
@@ -176,20 +194,30 @@ int main() {
             std::cout << file << " possible error 1 " << std::endl; // Wave223.csv
         }
 
-        std::vector<double> frequencies(N, 0);
-        std::vector<double> amplitudes(N, 0);
+        double freq = 1/(firstPeaklag * (seconds[1] - seconds[0]));
+        result.push_back(std::make_pair(file, freq));
+        if (false) {
+            std::vector<double> frequencies(N, 0);
+            std::vector<double> amplitudes(N, 0);
 
-        // Calculate the DFT of the signal
-        DFT(volts.data(), N, frequencies.data(), amplitudes.data());
+            // Calculate the DFT of the signal
+            DFT(volts.data(), N, frequencies.data(), amplitudes.data());
 
-        // Find the index of the maximum amplitude
-        int maxAmplitudeIndex = findMaxAmplitudeIndex(amplitudes.data(), N);
-        int period = N / frequencies[maxAmplitudeIndex];
-        //std::cout << "period= " << period << " firstPeaklag= " << firstPeaklag << std::endl;
-        if (abs(period - firstPeaklag) > 4) {
-            std::cout << file <<  " possible error 2" << std::endl; // Wave223.csv
+            // Find the index of the maximum amplitude
+            int maxAmplitudeIndex = findMaxAmplitudeIndex(amplitudes.data(), N);
+            int period = N / frequencies[maxAmplitudeIndex];
+            //std::cout << "period= " << period << " firstPeaklag= " << firstPeaklag << std::endl;
+            if (abs(period - firstPeaklag) > 4) {
+                std::cout << file << " possible error 2" << std::endl; // Wave223.csv
+            }
         }
 
     }
+
+    // sort result
+    sort(result.begin(), result.end(), [](auto left, auto right) {
+        return left.second < right.second;
+        });
+    saveToCSV(result, "fileFreq.csv");
     return 0;
 }
