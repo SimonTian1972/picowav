@@ -172,47 +172,49 @@ int main() {
         double maxAutocv = 0;
         autocvs.clear();
         autocvs.push_back(0); //  zero lag
+        double firstPeakAcv = 0;
+        int firstPeaklag = 0;
         {
             double mean = compute_mean(volts.data(), N);
             double var = compute_variance(volts.data(), N, mean);
+            bool beyondValley = false;
+            int lagValley = 0;
             for (int lag = 1; lag < N * 3 / 4; lag++) {
                 double autocv = compute_autoc(lag, volts.data(), N, mean, var);
-                if (autocv > maxAutocv) {
-                    maxAutocv = autocv;
-                }
                 autocvs.push_back(autocv);
-            }
-        }
-
-        int firstPeaklag = 0;
-
-        {
-            double firstPeakAcv = 0;
-            bool beyondValley = false;
-            for (int lag = 2; lag < N * 3 / 4 - 1; lag++) {
                 if (beyondValley == false) {
-                    if (autocvs[lag] < autocvs[lag - 1] && autocvs[lag] < autocvs[lag + 1]) {
-                        beyondValley = true;
-                    }
-                }
-                else {
-                    if (autocvs[lag] > maxAutocv * 0.8) {
-                        if (autocvs[lag] > autocvs[lag - 1] && autocvs[lag] > autocvs[lag + 1]) {
-                            firstPeaklag = lag;
-                            firstPeakAcv = autocvs[lag];
-                            break;
+                    if (lag > 3) {
+                        if (autocvs[lag - 1] < autocvs[lag - 2] && autocvs[lag - 1] < autocvs[lag]) {
+                            beyondValley = true;
+                            lagValley = lag - 1;
                         }
                     }
                 }
+                else {
+                    if (autocv > maxAutocv) {
+                        maxAutocv = autocv;
+                    }
+                }
             }
-            if (true) { // check
-                double diff = abs(firstPeakAcv - maxAutocv) / ((firstPeakAcv + maxAutocv) / 2);
-                if (diff > 0.1) {
-                    std::cout << file << " possible error 1 " << std::endl; // Wave223.csv
+
+            for (int lag = lagValley; lag < N * 3 / 4 - 1; lag++) {
+                if (autocvs[lag] > maxAutocv * 0.8) {
+                    if (autocvs[lag] > autocvs[lag - 1] && autocvs[lag] > autocvs[lag + 1]) {
+                        firstPeaklag = lag;
+                        firstPeakAcv = autocvs[lag];
+                        break;
+                    }
                 }
-                if (false) { // check with fft
-                    checkFFT(volts, firstPeaklag, N, file);
-                }
+            }
+        }
+
+        if (true) { // check
+            double diff = abs(firstPeakAcv - maxAutocv) / ((firstPeakAcv + maxAutocv) / 2);
+            if (diff > 0.1) {
+                std::cout << file << " possible error 1 " << std::endl; // Wave223.csv
+            }
+            if (false) { // check with fft
+                checkFFT(volts, firstPeaklag, N, file);
             }
         }
 
