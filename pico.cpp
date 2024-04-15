@@ -142,6 +142,22 @@ void saveToCSV(const std::vector<std::pair<std::string, double>>& data, const st
     std::cout << "Data saved to " << filename << " successfully." << std::endl;
 }
 
+void checkFFT(const std::vector<double>& volts, int firstPeaklag, int N, std::string file) {
+    std::vector<double> frequencies(N, 0);
+    std::vector<double> amplitudes(N, 0);
+
+    // Calculate the DFT of the signal
+    DFT(volts.data(), N, frequencies.data(), amplitudes.data());
+
+    // Find the index of the maximum amplitude
+    int maxAmplitudeIndex = findMaxAmplitudeIndex(amplitudes.data(), N);
+    int period = N / frequencies[maxAmplitudeIndex];
+    //std::cout << "period= " << period << " firstPeaklag= " << firstPeaklag << std::endl;
+    if (abs(period - firstPeaklag) > 4) {
+        std::cout << file << " possible error 2" << std::endl; // Wave223.csv
+    }
+}
+
 int main() {
     std::vector<std::string> csvFiles = getCsvFiles();
     std::vector<double> seconds;
@@ -153,65 +169,55 @@ int main() {
         volts.clear();
         readCsvFile(file, seconds, volts);
         int N = volts.size();
-        double mean = compute_mean(volts.data(), N);
-        double var = compute_variance(volts.data(), N, mean);
         double maxAutocv = 0;
-        double minAutocv = DBL_MAX;
-        double firstPeakAcv = 0;
-        int firstPeaklag = 0;
         autocvs.clear();
         autocvs.push_back(0); //  zero lag
-        for (int lag = 1; lag < N*3/4; lag++) {
-            double autocv = compute_autoc(lag, volts.data(), N, mean, var);
-            if (autocv > maxAutocv) {
-                maxAutocv = autocv;
+        {
+            double mean = compute_mean(volts.data(), N);
+            double var = compute_variance(volts.data(), N, mean);
+            for (int lag = 1; lag < N * 3 / 4; lag++) {
+                double autocv = compute_autoc(lag, volts.data(), N, mean, var);
+                if (autocv > maxAutocv) {
+                    maxAutocv = autocv;
+                }
+                autocvs.push_back(autocv);
             }
-            if (autocv < minAutocv) {
-                minAutocv = autocv;
-            }
-            autocvs.push_back(autocv);
         }
 
-        bool beyondValley = false;
-        for (int lag = 2; lag < N * 3 / 4-1; lag++) {
-            if (beyondValley == false) {
-                if (autocvs[lag] < autocvs[lag - 1] && autocvs[lag] < autocvs[lag + 1]) {
-                    beyondValley = true;
+        int firstPeaklag = 0;
+
+        {
+            double firstPeakAcv = 0;
+            bool beyondValley = false;
+            for (int lag = 2; lag < N * 3 / 4 - 1; lag++) {
+                if (beyondValley == false) {
+                    if (autocvs[lag] < autocvs[lag - 1] && autocvs[lag] < autocvs[lag + 1]) {
+                        beyondValley = true;
+                    }
                 }
-            } else {
-                if (autocvs[lag] > maxAutocv * 0.8) {
-                    if (autocvs[lag] > autocvs[lag - 1] && autocvs[lag] > autocvs[lag + 1]) {
-                        firstPeaklag = lag;
-                        firstPeakAcv = autocvs[lag];
-                        break;
+                else {
+                    if (autocvs[lag] > maxAutocv * 0.8) {
+                        if (autocvs[lag] > autocvs[lag - 1] && autocvs[lag] > autocvs[lag + 1]) {
+                            firstPeaklag = lag;
+                            firstPeakAcv = autocvs[lag];
+                            break;
+                        }
                     }
                 }
             }
-        }
-
-        double diff = abs(firstPeakAcv - maxAutocv) / ((firstPeakAcv + maxAutocv) / 2);
-        if (diff > 0.1) {
-            std::cout << file << " possible error 1 " << std::endl; // Wave223.csv
-        }
-
-        double freq = 1/(firstPeaklag * (seconds[1] - seconds[0]));
-        result.push_back(std::make_pair(file, freq));
-        if (false) {
-            std::vector<double> frequencies(N, 0);
-            std::vector<double> amplitudes(N, 0);
-
-            // Calculate the DFT of the signal
-            DFT(volts.data(), N, frequencies.data(), amplitudes.data());
-
-            // Find the index of the maximum amplitude
-            int maxAmplitudeIndex = findMaxAmplitudeIndex(amplitudes.data(), N);
-            int period = N / frequencies[maxAmplitudeIndex];
-            //std::cout << "period= " << period << " firstPeaklag= " << firstPeaklag << std::endl;
-            if (abs(period - firstPeaklag) > 4) {
-                std::cout << file << " possible error 2" << std::endl; // Wave223.csv
+            if (true) { // check
+                double diff = abs(firstPeakAcv - maxAutocv) / ((firstPeakAcv + maxAutocv) / 2);
+                if (diff > 0.1) {
+                    std::cout << file << " possible error 1 " << std::endl; // Wave223.csv
+                }
+                if (false) { // check with fft
+                    checkFFT(volts, firstPeaklag, N, file);
+                }
             }
         }
 
+        double freq = 1/(firstPeaklag * (seconds[1] - seconds[0]));
+        result.push_back(std::make_pair(file, freq));      
     }
 
     // sort result
