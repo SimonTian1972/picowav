@@ -218,7 +218,13 @@ int main() {
             }
         }
 
-        double freq = 1/(firstPeaklag * (seconds[1] - seconds[0]));
+        double freq;
+        if (firstPeaklag == 0) {
+            freq = -1;
+        }
+        else {
+            freq = 1 / (firstPeaklag * (seconds[1] - seconds[0]));
+        }
         result.push_back(std::make_pair(file, freq));      
     }
 
