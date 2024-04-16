@@ -66,7 +66,7 @@ double compute_autoc(int lag, const double X[], int N, double Mean, double Varia
 
 #include <cmath>
 #ifndef M_PI
-#define M_PI (3.14159265358979323846) // Define M_PI if not already defined
+#define M_PI (3.14159265358979323846)
 #endif
 // Function to calculate the Discrete Fourier Transform (DFT) of a signal X, how about FFT?
 void DFT(const double X[], int N, double frequencies[], double amplitudes[]) {
@@ -76,7 +76,7 @@ void DFT(const double X[], int N, double frequencies[], double amplitudes[]) {
         for (int n = 0; n < N; ++n) {
             double angle = 2.0 * M_PI * k * n / N;
             re += X[n] * cos(angle);
-            im -= X[n] * sin(angle); // negative sign for forward transform
+            im -= X[n] * sin(angle);
         }
         frequencies[k] = k;
         amplitudes[k] = sqrt(re * re + im * im);
@@ -152,9 +152,9 @@ void checkFFT(const std::vector<double>& volts, int firstPeaklag, int N, std::st
     // Find the index of the maximum amplitude
     int maxAmplitudeIndex = findMaxAmplitudeIndex(amplitudes.data(), N);
     int period = N / frequencies[maxAmplitudeIndex];
-    //std::cout << "period= " << period << " firstPeaklag= " << firstPeaklag << std::endl;
+
     if (abs(period - firstPeaklag) > 4) {
-        std::cout << file << " possible error 2" << std::endl; // Wave223.csv
+        std::cout << file << " possible error 2" << std::endl;
     }
 }
 
