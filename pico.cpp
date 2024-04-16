@@ -171,7 +171,7 @@ int main() {
         int N = volts.size();
         double maxAutocv = 0;
         autocvs.clear();
-        autocvs.push_back(0); //  zero lag
+        autocvs.push_back(0); //  zero lag is not considered
         double firstPeakAcv = 0;
         int firstPeaklag = 0;
         {
