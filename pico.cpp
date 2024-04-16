@@ -135,7 +135,7 @@ void saveToCSV(const std::vector<std::pair<std::string, double>>& data, const st
     // Iterate over each vector of pairs
     for (const auto& item : data) {
         // Write each pair to the CSV file
-        outputFile << item.first << ", " << item.second <<" cycles/s" << "\n";
+        outputFile << item.first << ", " << item.second <<" cycles/second" << "\n";
     }
 
     outputFile.close();
