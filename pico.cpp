@@ -211,7 +211,7 @@ int main() {
         if (true) { // check
             double diff = abs(firstPeakAcv - maxAutocv) / ((firstPeakAcv + maxAutocv) / 2);
             if (diff > 0.1) {
-                std::cout << file << " possible error 1 " << std::endl; // Wave223.csv
+                std::cout << file << " possible error 1 " << std::endl;
             }
             if (false) { // check with fft
                 checkFFT(volts, firstPeaklag, N, file);
