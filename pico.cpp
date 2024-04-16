@@ -135,7 +135,7 @@ void saveToCSV(const std::vector<std::pair<std::string, double>>& data, const st
     // Iterate over each vector of pairs
     for (const auto& item : data) {
         // Write each pair to the CSV file
-            outputFile << item.first << ", " << item.second << "\n";
+        outputFile << item.first << ", " << item.second << "\n";
     }
 
     outputFile.close();
@@ -190,7 +190,7 @@ int main() {
                         }
                     }
                 }
-                else {  // do not count auto correlation for which lag is close to 0
+                else {  // do not count auto correlation whose lag is close to 0
                     if (autocv > maxAutocv) {
                         maxAutocv = autocv;
                     }
