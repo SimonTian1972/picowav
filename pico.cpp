@@ -190,14 +190,14 @@ int main() {
                         }
                     }
                 }
-                else {
+                else {  // do not count auto correlation for which lag is close to 0
                     if (autocv > maxAutocv) {
                         maxAutocv = autocv;
                     }
                 }
             }
 
-            for (int lag = lagValley; lag < N * 3 / 4 - 1; lag++) {
+            for (int lag = lagValley; lag < N * 3 / 4 - 1; lag++) { // find first peak in Acv
                 if (autocvs[lag] > maxAutocv * 0.8) {
                     if (autocvs[lag] > autocvs[lag - 1] && autocvs[lag] > autocvs[lag + 1]) {
                         firstPeaklag = lag;
@@ -221,8 +221,7 @@ int main() {
         double freq;
         if (firstPeaklag == 0) {
             freq = -1;
-        }
-        else {
+        } else {
             freq = 1 / (firstPeaklag * (seconds[1] - seconds[0]));
         }
         result.push_back(std::make_pair(file, freq));      
@@ -232,6 +231,6 @@ int main() {
     sort(result.begin(), result.end(), [](auto left, auto right) {
         return left.second < right.second;
         });
-    saveToCSV(result, "fileFreq.csv");
+    saveToCSV(result, "fileFreq.csv.txt");
     return 0;
 }
