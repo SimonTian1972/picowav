@@ -231,6 +231,6 @@ int main() {
     sort(result.begin(), result.end(), [](auto left, auto right) {
         return left.second < right.second;
         });
-    saveToCSV(result, "fileFreq.csv.txt");
+    saveToCSV(result, "fileFreq.csv");
     return 0;
 }
